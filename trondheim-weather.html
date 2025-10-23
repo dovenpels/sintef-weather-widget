@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="sintef-clean.css">
 
     <!-- Weather App Custom Styles -->
-    <link rel="stylesheet" href="weather-app.css?v=9">
+    <link rel="stylesheet" href="weather-app.css?v=21">
 </head>
 <body>
     <div class="logo">
@@ -116,7 +116,7 @@
                     const avgCloud = clouds.length > 0 ? (clouds.reduce((a, b) => a + b, 0) / clouds.length) : 0;
 
                     // LINE 1: Min/Max temperature
-                    const line1 = `Laveste meldte i dag er <strong>${minTemp}°</strong> og høyeste meldte er <strong>${maxTemp}°</strong>`;
+                    const line1 = `Laveste meldte i dag er <strong>${minTemp}°</strong> og høyeste meldte er <strong>${maxTemp}°</strong> 🌡️`;
 
                     // LINE 2: Current conditions with "feels like"
                     const feelsLike = calculateWindChill(currentTemp, currentWind);
@@ -126,19 +126,19 @@
                     else if (currentWind < 10) windText = "frisk vind";
                     else windText = "sterk vind";
 
-                    const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong>`;
+                    const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong> 💨`;
 
                     // LINE 3: Precipitation forecast (next hour)
                     const nextHourPrecip = timeseries[0].data.next_1_hours?.details?.precipitation_amount || 0;
                     let line3;
                     if (nextHourPrecip < 0.1) {
-                        line3 = "Ingen nedbør neste time";
+                        line3 = "Ingen nedbør neste time 🌧️";
                     } else if (nextHourPrecip < 0.5) {
-                        line3 = "Lett nedbør neste time";
+                        line3 = "Lett nedbør neste time 🌧️";
                     } else if (nextHourPrecip < 2) {
-                        line3 = "Moderat nedbør neste time";
+                        line3 = "Moderat nedbør neste time 🌧️";
                     } else {
-                        line3 = `Kraftig nedbør neste time (<strong>${nextHourPrecip.toFixed(1)} mm</strong>)`;
+                        line3 = `Kraftig nedbør neste time (<strong>${nextHourPrecip.toFixed(1)} mm</strong>) 🌧️`;
                     }
 
                     // LINE 4: Cloud forecast (rest of day)
@@ -146,19 +146,19 @@
                                        timeseries[0].data.next_1_hours?.summary?.symbol_code || '';
                     let line4;
                     if (symbolCode.includes('clearsky') || symbolCode.includes('fair')) {
-                        line4 = "Det blir klart resten av dagen";
+                        line4 = "Det blir klart resten av dagen ☀️";
                     } else if (symbolCode.includes('partlycloudy')) {
-                        line4 = "Det blir delvis skyet resten av dagen";
+                        line4 = "Det blir delvis skyet resten av dagen 🌤️";
                     } else if (symbolCode.includes('cloudy')) {
-                        line4 = "Det forblir overskyet resten av dagen";
+                        line4 = "Det forblir overskyet resten av dagen ☁️";
                     } else if (symbolCode.includes('rain') || symbolCode.includes('sleet') || symbolCode.includes('snow')) {
-                        line4 = "Nedbør ventet senere i dag";
+                        line4 = "Nedbør ventet senere i dag 🌧️";
                     } else {
                         // Fallback: use average cloud coverage
-                        if (avgCloud < 25) line4 = "Det blir klart resten av dagen";
-                        else if (avgCloud < 50) line4 = "Det blir lettskyet resten av dagen";
-                        else if (avgCloud < 75) line4 = "Det blir delvis skyet resten av dagen";
-                        else line4 = "Det forblir overskyet resten av dagen";
+                        if (avgCloud < 25) line4 = "Det blir klart resten av dagen ☀️";
+                        else if (avgCloud < 50) line4 = "Det blir lettskyet resten av dagen 🌤️";
+                        else if (avgCloud < 75) line4 = "Det blir delvis skyet resten av dagen 🌥️";
+                        else line4 = "Det forblir overskyet resten av dagen ☁️";
                     }
 
                     // Combine all lines with proper HTML structure
@@ -212,7 +212,8 @@
                     snowflake.style.opacity = Math.random() * 0.6 + 0.4;
                     animationDiv.appendChild(snowflake);
                 }
-                infoText.textContent = 'SINTEF forsker på klimaendringer og deres påvirkning på været. Vi jobber med å forstå og tilpasse oss et klima i endring.';
+                document.getElementById('info-title').textContent = 'Snow for the Future';
+                infoText.textContent = 'Utvikler klimavennlig, energieffektiv og temperaturuavhengig snøproduksjon med varmepumper, snølagring og gjenbruk, samt deler kunnskap gjennom Snøkompetanse.no.';
             } else if (precip > 0.5) {
                 // REGN
                 document.body.classList.add('dark-bg');
@@ -225,7 +226,8 @@
                     rain.style.animationDelay = -(Math.random() * 2) + 's';
                     animationDiv.appendChild(rain);
                 }
-                infoText.textContent = 'SINTEF arbeider med vannforvaltning og overvannshåndtering for å beskytte bygg og infrastruktur mot flom og ekstremvær.';
+                document.getElementById('info-title').textContent = 'Verdens beste vannkraftmodeller';
+                infoText.textContent = 'SINTEF sine modeller brukes av kraftprodusenter i hele Norden. Modellene optimaliserer magasinforvaltning, markedsdeltakelse og kraftproduksjon fra langsiktig planlegging til sanntidsdrift.';
             } else if (wind > 5) {
                 // VIND
                 document.body.classList.add('dark-bg');
@@ -243,8 +245,36 @@
                     animationDiv.appendChild(leaf);
                 }
 
-                // Oppdater info-boksen med NorthWind informasjon
-                infoText.textContent = 'NorthWind er et forskningssenter for vindkraft. Senteret ledes av SINTEF, og skal bidra til lønnsom norsk eksportindustri innen havvind, nye grønne jobber, og vindkraft som respekterer natur og mennesker.';
+                // Legg til vindmølle (havvindmølle for NorthWind)
+                const windmill = document.createElement('div');
+                windmill.className = 'windmill';
+
+                // Beregn rotasjonshastighet basert på vindstyrke
+                let rotorSpeed;
+                if (wind < 5) rotorSpeed = '5s';      // Lett vind
+                else if (wind < 10) rotorSpeed = '3s'; // Frisk vind
+                else rotorSpeed = '2s';                // Sterk vind
+
+                windmill.innerHTML = `
+                    <div class="windmill-rotor spinning" style="--rotor-speed: ${rotorSpeed}">
+                        <div class="blade blade-1"></div>
+                        <div class="blade blade-2"></div>
+                        <div class="blade blade-3"></div>
+                    </div>
+                    <div class="windmill-tower"></div>
+                `;
+
+                animationDiv.appendChild(windmill);
+
+                // Oppdater info-boksen med NorthWind informasjon og logo
+                document.getElementById('info-title').textContent = 'Konkurransedyktig norsk havvind og bærekraftig vindkraft';
+                infoText.innerHTML = `
+                    NorthWind er et forskningssenter for vindkraft. Senteret ledes av SINTEF, og skal bidra til lønnsom norsk eksportindustri innen havvind, nye grønne jobber, og vindkraft som respekterer natur og mennesker.
+                    <div class="northwind-footer">
+                        <img src="NorthWind.svg" alt="NorthWind" class="northwind-logo-bottom">
+                        <span class="northwind-url">northwindresearch.no</span>
+                    </div>
+                `;
             } else if (cloud > 70) {
                 // OVERSKYET
                 document.body.classList.add('dark-bg');
@@ -258,7 +288,8 @@
                     cloudEl.style.animationDelay = -(Math.random() * 50) + 's';
                     animationDiv.appendChild(cloudEl);
                 }
-                infoText.textContent = 'SINTEF utvikler teknologi for værprognoser og klimamodellering som hjelper samfunnet å forberede seg på morgendagens vær.';
+                document.getElementById('info-title').textContent = 'Solceller virker også i overskyet vær';
+                infoText.textContent = 'De produserer strøm i diffust lys, ofte rundt 10–40% av klarværsnivå. Kaldt vær kan øke virkningsgrad, men snø som dekker panelene stopper produksjonen.';
             } else {
                 // SOL (default)
                 document.body.classList.add('dark-bg');
@@ -279,7 +310,8 @@
                     cloudEl.style.opacity = '0.4';
                     animationDiv.appendChild(cloudEl);
                 }
-                infoText.textContent = 'SINTEF forsker på solenergi og solcelleeffektivitet for å fremme fornybar energi i Norge.';
+                document.getElementById('info-title').textContent = 'Solceller på taket';
+                infoText.textContent = 'Energibygget har solceller på taket og varmepumper for oppvarming og nedkjøling. Bygget kan benytte fjernvarme fra NTNUs fjernvarmering og har miljøsertifiseringen BREEAM-NOR Excellent.';
             }
         }
 
@@ -309,7 +341,7 @@
             const cond = conditions[type];
 
             // LINE 1: Min/Max
-            const line1 = `Laveste meldte i dag er <strong>${cond.minTemp}°</strong> og høyeste meldte er <strong>${cond.maxTemp}°</strong>`;
+            const line1 = `Laveste meldte i dag er <strong>${cond.minTemp}°</strong> og høyeste meldte er <strong>${cond.maxTemp}°</strong> 🌡️`;
 
             // LINE 2: Current + feels like
             const feelsLike = calculateWindChill(cond.currentTemp, cond.wind);
@@ -318,26 +350,26 @@
             else if (cond.wind < 5) windText = "lett vind";
             else if (cond.wind < 10) windText = "frisk vind";
             else windText = "sterk vind";
-            const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong>`;
+            const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong> 💨`;
 
             // LINE 3: Precipitation
             let line3;
             if (cond.precip < 0.1) {
-                line3 = "Ingen nedbør neste time";
+                line3 = "Ingen nedbør neste time 🌧️";
             } else if (cond.precip < 0.5) {
-                line3 = "Lett nedbør neste time";
+                line3 = "Lett nedbør neste time 🌧️";
             } else if (cond.precip < 2) {
-                line3 = "Moderat nedbør neste time";
+                line3 = "Moderat nedbør neste time 🌧️";
             } else {
-                line3 = `Kraftig nedbør neste time (<strong>${cond.precip.toFixed(1)} mm</strong>)`;
+                line3 = `Kraftig nedbør neste time (<strong>${cond.precip.toFixed(1)} mm</strong>) 🌧️`;
             }
 
             // LINE 4: Cloud forecast
             let line4;
-            if (cond.cloud < 25) line4 = "Det blir klart resten av dagen";
-            else if (cond.cloud < 50) line4 = "Det blir lettskyet resten av dagen";
-            else if (cond.cloud < 75) line4 = "Det blir delvis skyet resten av dagen";
-            else line4 = "Det forblir overskyet resten av dagen";
+            if (cond.cloud < 25) line4 = "Det blir klart resten av dagen ☀️";
+            else if (cond.cloud < 50) line4 = "Det blir lettskyet resten av dagen 🌤️";
+            else if (cond.cloud < 75) line4 = "Det blir delvis skyet resten av dagen 🌥️";
+            else line4 = "Det forblir overskyet resten av dagen ☁️";
 
             // Build HTML
             const headline = document.getElementById('weather-headline');
