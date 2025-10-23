@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Værvarsel Trondheim - SINTEF</title>
+
+    <!-- Google Fonts - Lato with multiple weights -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <!-- SINTEF Base Styles (Clean Version) -->
+    <link rel="stylesheet" href="sintef-clean.css">
+
+    <!-- Weather App Custom Styles -->
+    <link rel="stylesheet" href="weather-app.css?v=8">
+</head>
+<body>
+    <div class="logo">
+        <img src="SINTEF_Logo_Sentrert_RGB.jpg" alt="SINTEF" class="logo-img">
+    </div>
+
+    <div id="weather-headline" class="loading">Henter værdata...</div>
+
+    <div class="weather-container">
+        <div id="animation" class="animation-layer"></div>
+        <div id="info-box">
+            <h2 id="info-title">Visste du at...</h2>
+            <div id="info-text" class="loading">Laster informasjon...</div>
+        </div>
+    </div>
+    
+    <div class="menu-wrapper">
+        <button class="hamburger-menu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="test-controls">
+            <button onclick="testWeather('sun')">☀️ Sol</button>
+            <button onclick="testWeather('cloudy')">☁️ Overskyet</button>
+            <button onclick="testWeather('rain')">🌧️ Regn</button>
+            <button onclick="testWeather('snow')">❄️ Snø</button>
+            <button onclick="testWeather('wind')">💨 Vind</button>
+        </div>
+    </div>
+
+    <script>
+        const LAT = 63.4305;
+        const LON = 10.3951;
+
+        async function fetchWeather() {
+            try {
+                const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                let output = '';
+                const timeseries = data.properties.timeseries;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                let temps = [];
+                let winds = [];
+                let precip = 0;
+                let clouds = [];
+                
+                for (let i = 0; i < timeseries.length; i++) {
+                    const entry = timeseries[i];
+                    const time = new Date(entry.time);
+                    const checkDate = new Date(time);
+                    checkDate.setHours(0, 0, 0, 0);
+                    
+                    if (checkDate.getTime() !== today.getTime()) continue;
+                    
+                    const instant = entry.data.instant.details;
+                    temps.push(instant.air_temperature);
+                    winds.push(instant.wind_speed);
+                    if (instant.cloud_area_fraction !== undefined) {
+                        clouds.push(instant.cloud_area_fraction);
+                    }
+                    
+                    const next = entry.data.next_1_hours || entry.data.next_6_hours;
+                    if (next?.details.precipitation_amount !== undefined) {
+                        precip += next.details.precipitation_amount;
+                    }
+                }
+                
+                if (temps.length > 0) {
+                    const minTemp = Math.round(Math.min(...temps));
+                    const maxTemp = Math.round(Math.max(...temps));
+                    const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length);
+                    const avgWind = (winds.reduce((a, b) => a + b, 0) / winds.length).toFixed(1);
+                    const avgCloud = clouds.length > 0 ? (clouds.reduce((a, b) => a + b, 0) / clouds.length) : 0;
+
+                    let text = `Laveste meldte i dag er <strong>${minTemp} grader</strong> og høyeste meldte er <strong>${maxTemp} grader</strong>`;
+
+                    if (avgWind < 2) {
+                        text += ` med <strong>svak vind</strong>`;
+                    } else if (avgWind < 5) {
+                        text += ` med <strong>lett vind</strong> på <strong>${avgWind} m/s</strong>`;
+                    } else if (avgWind < 10) {
+                        text += ` med <strong>frisk vind</strong> på <strong>${avgWind} m/s</strong>`;
+                    } else {
+                        text += ` med <strong>sterk vind</strong> på <strong>${avgWind} m/s</strong>`;
+                    }
+
+                    if (precip < 0.1) {
+                        text += ` og <strong>ingen nedbør</strong>.`;
+                    } else if (precip < 1) {
+                        text += ` og <strong>litt nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
+                    } else if (precip < 5) {
+                        text += ` og <strong>moderate mengder nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
+                    } else {
+                        text += ` og <strong>mye nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
+                    }
+
+                    output = text;
+
+                    // Vis animasjon basert på vær
+                    showWeatherAnimation(avgTemp, avgWind, precip, avgCloud);
+                }
+
+                const headline = document.getElementById('weather-headline');
+                headline.innerHTML = output;
+
+                // Trigger animation
+                headline.classList.remove('animate-in');
+                void headline.offsetWidth; // Force reflow
+                headline.classList.add('animate-in');
+
+            } catch (error) {
+                document.getElementById('weather-headline').textContent = 'Kunne ikke hente værdata';
+            }
+        }
+
+        function showWeatherAnimation(temp, wind, precip, cloud) {
+            const animationDiv = document.getElementById('animation');
+            animationDiv.innerHTML = '';
+            const infoText = document.getElementById('info-text');
+            const infoBox = document.getElementById('info-box');
+
+            // Trigger info box animation
+            infoBox.classList.remove('animate-in');
+            void infoBox.offsetWidth; // Force reflow
+            infoBox.classList.add('animate-in');
+
+            // Prioriter animasjoner
+            if (precip > 1 && temp < 2) {
+                // SNØ
+                document.body.classList.remove('dark-bg');
+                animationDiv.className = 'animation-layer snow-animation';
+                for (let i = 0; i < 50; i++) {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = '❄';
+                    snowflake.style.left = Math.random() * 100 + '%';
+                    snowflake.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                    snowflake.style.animationDelay = -(Math.random() * 6) + 's';
+                    snowflake.style.opacity = Math.random() * 0.6 + 0.4;
+                    animationDiv.appendChild(snowflake);
+                }
+                infoText.textContent = 'SINTEF forsker på klimaendringer og deres påvirkning på været. Vi jobber med å forstå og tilpasse oss et klima i endring.';
+            } else if (precip > 0.5) {
+                // REGN
+                document.body.classList.add('dark-bg');
+                animationDiv.className = 'animation-layer rain-animation';
+                for (let i = 0; i < 100; i++) {
+                    const rain = document.createElement('div');
+                    rain.className = 'rain';
+                    rain.style.left = Math.random() * 100 + '%';
+                    rain.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                    rain.style.animationDelay = -(Math.random() * 2) + 's';
+                    animationDiv.appendChild(rain);
+                }
+                infoText.textContent = 'SINTEF arbeider med vannforvaltning og overvannshåndtering for å beskytte bygg og infrastruktur mot flom og ekstremvær.';
+            } else if (wind > 5) {
+                // VIND
+                document.body.classList.add('dark-bg');
+                animationDiv.className = 'animation-layer wind-animation';
+
+                // Legg til løv som blåser forbi
+                const leafEmojis = ['🍂', '🍃', '🍁'];
+                for (let i = 0; i < 15; i++) {
+                    const leaf = document.createElement('div');
+                    leaf.className = 'leaf';
+                    leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+                    leaf.style.top = Math.random() * 80 + 10 + '%';
+                    leaf.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                    leaf.style.animationDelay = Math.random() * 5 + 's';
+                    animationDiv.appendChild(leaf);
+                }
+
+                // Oppdater info-boksen med NorthWind informasjon
+                infoText.textContent = 'NorthWind er et forskningssenter for vindkraft. Senteret ledes av SINTEF, og skal bidra til lønnsom norsk eksportindustri innen havvind, nye grønne jobber, og vindkraft som respekterer natur og mennesker.';
+            } else if (cloud > 70) {
+                // OVERSKYET
+                document.body.classList.add('dark-bg');
+                animationDiv.className = 'animation-layer cloudy-animation';
+                for (let i = 0; i < 8; i++) {
+                    const cloudEl = document.createElement('div');
+                    cloudEl.className = 'cloud';
+                    cloudEl.textContent = '☁️';
+                    cloudEl.style.top = (Math.random() * 60 + 10) + '%';
+                    cloudEl.style.animationDuration = (Math.random() * 30 + 20) + 's';
+                    cloudEl.style.animationDelay = -(Math.random() * 50) + 's';
+                    animationDiv.appendChild(cloudEl);
+                }
+                infoText.textContent = 'SINTEF utvikler teknologi for værprognoser og klimamodellering som hjelper samfunnet å forberede seg på morgendagens vær.';
+            } else {
+                // SOL (default)
+                document.body.classList.add('dark-bg');
+                animationDiv.className = 'animation-layer sun-animation';
+                const sun = document.createElement('div');
+                sun.className = 'sun';
+                animationDiv.appendChild(sun);
+
+                // Legg til noen skyer for variasjon
+                for (let i = 0; i < 3; i++) {
+                    const cloudEl = document.createElement('div');
+                    cloudEl.style.position = 'absolute';
+                    cloudEl.style.fontSize = '60px';
+                    cloudEl.style.top = (Math.random() * 30 + 10) + '%';
+                    cloudEl.style.left = (Math.random() * -20) + '%';
+                    cloudEl.textContent = '☁️';
+                    cloudEl.style.animation = `drift ${Math.random() * 40 + 40}s linear infinite`;
+                    cloudEl.style.opacity = '0.4';
+                    animationDiv.appendChild(cloudEl);
+                }
+                infoText.textContent = 'SINTEF forsker på solenergi og solcelleeffektivitet for å fremme fornybar energi i Norge.';
+            }
+        }
+
+        fetchWeather();
+        
+        // Test-funksjon for å simulere forskjellig vær
+        function testWeather(type) {
+            // Fjern active class fra alle knapper
+            document.querySelectorAll('.test-controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Legg til active class på klikket knapp
+            const buttons = document.querySelectorAll('.test-controls button');
+            const typeMap = { 'sun': 0, 'cloudy': 1, 'rain': 2, 'snow': 3, 'wind': 4 };
+            buttons[typeMap[type]].classList.add('active');
+            
+            const texts = {
+                'sun': 'Laveste meldte i dag er <strong>15 grader</strong> og høyeste meldte er <strong>20 grader</strong> med <strong>lett vind</strong> på <strong>2.5 m/s</strong> og <strong>ingen nedbør</strong>.',
+                'cloudy': 'Laveste meldte i dag er <strong>10 grader</strong> og høyeste meldte er <strong>15 grader</strong> med <strong>svak vind</strong> og <strong>ingen nedbør</strong>.',
+                'rain': 'Laveste meldte i dag er <strong>8 grader</strong> og høyeste meldte er <strong>12 grader</strong> med <strong>lett vind</strong> på <strong>3.2 m/s</strong> og <strong>moderate mengder nedbør</strong> (<strong>4.5 mm</strong>).',
+                'snow': 'Laveste meldte i dag er <strong>-2 grader</strong> og høyeste meldte er <strong>1 grader</strong> med <strong>lett vind</strong> på <strong>2.8 m/s</strong> og <strong>moderate mengder nedbør</strong> (<strong>3.2 mm</strong>).',
+                'wind': 'Laveste meldte i dag er <strong>5 grader</strong> og høyeste meldte er <strong>10 grader</strong> med <strong>sterk vind</strong> på <strong>12.5 m/s</strong> og <strong>ingen nedbør</strong>.'
+            };
+
+            const headline = document.getElementById('weather-headline');
+            headline.innerHTML = texts[type];
+
+            // Trigger animation
+            headline.classList.remove('animate-in');
+            void headline.offsetWidth; // Force reflow
+            headline.classList.add('animate-in');
+
+            // Simuler værforhold
+            const conditions = {
+                'sun': { temp: 17, wind: 2.5, precip: 0, cloud: 20 },
+                'cloudy': { temp: 12, wind: 1.5, precip: 0, cloud: 85 },
+                'rain': { temp: 10, wind: 3.2, precip: 4.5, cloud: 90 },
+                'snow': { temp: -0.5, wind: 2.8, precip: 3.2, cloud: 95 },
+                'wind': { temp: 7.5, wind: 12.5, precip: 0, cloud: 60 }
+            };
+            
+            const cond = conditions[type];
+            showWeatherAnimation(cond.temp, cond.wind, cond.precip, cond.cloud);
+        }
+    </script>
+</body>
+</html>

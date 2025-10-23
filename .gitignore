@@ -1,0 +1,13 @@
+# Large video file (not currently used in application)
+wind-loop.mp4
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
