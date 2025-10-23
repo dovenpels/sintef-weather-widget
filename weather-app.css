@@ -92,13 +92,29 @@ body {
 #weather-headline {
     z-index: 10;
     color: var(--sintef-blue);
-    font-size: var(--step-3);
-    font-weight: 400 !important;
-    line-height: 1.2;
-    max-width: 90%;
+    max-width: min(90%, 50ch); /* Optimal lesbarhet: max 50 tegn per linje */
     flex-shrink: 0;
     opacity: 0;
     transform: translateY(30px);
+}
+
+/* Main temperature range - larger text */
+#weather-headline .temp-range {
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: var(--space-xs);
+}
+
+/* Supporting info lines - smaller text */
+#weather-headline .current-conditions,
+#weather-headline .precipitation-forecast,
+#weather-headline .cloud-forecast {
+    font-size: var(--step-1);
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: var(--space-3xs);
+    opacity: 0.9;
 }
 
 /* Animation class */
@@ -150,7 +166,7 @@ body.dark-bg #weather-headline {
     background: var(--sintef-beige);
     padding: var(--space-m) var(--space-l);
     border-radius: 1rem;
-    max-width: 600px;
+    max-width: min(600px, 65ch); /* Optimal lesbarhet for løpende tekst */
     box-shadow: 0 0 0.625rem 0 rgba(0, 0, 0, 0.16);
     opacity: 0;
     transform: translateY(30px);

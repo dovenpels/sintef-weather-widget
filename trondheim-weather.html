@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="sintef-clean.css">
 
     <!-- Weather App Custom Styles -->
-    <link rel="stylesheet" href="weather-app.css?v=8">
+    <link rel="stylesheet" href="weather-app.css?v=9">
 </head>
 <body>
     <div class="logo">
@@ -50,6 +50,19 @@
     <script>
         const LAT = 63.4305;
         const LON = 10.3951;
+
+        // Calculate wind chill (føles som temperatur)
+        function calculateWindChill(tempC, windSpeedMs) {
+            const windKmh = windSpeedMs * 3.6;
+            // Wind chill formula only applies when temp < 10°C and wind > 4.8 km/h
+            if (tempC >= 10 || windKmh < 4.8) {
+                return tempC;
+            }
+            // Canadian wind chill formula
+            const wc = 13.12 + 0.6215 * tempC - 11.37 * Math.pow(windKmh, 0.16)
+                       + 0.3965 * tempC * Math.pow(windKmh, 0.16);
+            return Math.round(wc);
+        }
 
         async function fetchWeather() {
             try {
@@ -88,39 +101,76 @@
                     }
                 }
                 
-                if (temps.length > 0) {
+                if (temps.length > 0 && timeseries.length > 0) {
+                    // Calculate today's min/max temperatures
                     const minTemp = Math.round(Math.min(...temps));
                     const maxTemp = Math.round(Math.max(...temps));
+
+                    // Get current conditions (first entry in timeseries)
+                    const now = timeseries[0].data.instant.details;
+                    const currentTemp = Math.round(now.air_temperature);
+                    const currentWind = now.wind_speed;
+
+                    // Calculate averages for animation logic
                     const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length);
-                    const avgWind = (winds.reduce((a, b) => a + b, 0) / winds.length).toFixed(1);
                     const avgCloud = clouds.length > 0 ? (clouds.reduce((a, b) => a + b, 0) / clouds.length) : 0;
 
-                    let text = `Laveste meldte i dag er <strong>${minTemp} grader</strong> og høyeste meldte er <strong>${maxTemp} grader</strong>`;
+                    // LINE 1: Min/Max temperature
+                    const line1 = `Laveste meldte i dag er <strong>${minTemp}°</strong> og høyeste meldte er <strong>${maxTemp}°</strong>`;
 
-                    if (avgWind < 2) {
-                        text += ` med <strong>svak vind</strong>`;
-                    } else if (avgWind < 5) {
-                        text += ` med <strong>lett vind</strong> på <strong>${avgWind} m/s</strong>`;
-                    } else if (avgWind < 10) {
-                        text += ` med <strong>frisk vind</strong> på <strong>${avgWind} m/s</strong>`;
+                    // LINE 2: Current conditions with "feels like"
+                    const feelsLike = calculateWindChill(currentTemp, currentWind);
+                    let windText;
+                    if (currentWind < 2) windText = "svak vind";
+                    else if (currentWind < 5) windText = "lett vind";
+                    else if (currentWind < 10) windText = "frisk vind";
+                    else windText = "sterk vind";
+
+                    const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong>`;
+
+                    // LINE 3: Precipitation forecast (next hour)
+                    const nextHourPrecip = timeseries[0].data.next_1_hours?.details?.precipitation_amount || 0;
+                    let line3;
+                    if (nextHourPrecip < 0.1) {
+                        line3 = "Ingen nedbør neste time";
+                    } else if (nextHourPrecip < 0.5) {
+                        line3 = "Lett nedbør neste time";
+                    } else if (nextHourPrecip < 2) {
+                        line3 = "Moderat nedbør neste time";
                     } else {
-                        text += ` med <strong>sterk vind</strong> på <strong>${avgWind} m/s</strong>`;
+                        line3 = `Kraftig nedbør neste time (<strong>${nextHourPrecip.toFixed(1)} mm</strong>)`;
                     }
 
-                    if (precip < 0.1) {
-                        text += ` og <strong>ingen nedbør</strong>.`;
-                    } else if (precip < 1) {
-                        text += ` og <strong>litt nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
-                    } else if (precip < 5) {
-                        text += ` og <strong>moderate mengder nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
+                    // LINE 4: Cloud forecast (rest of day)
+                    const symbolCode = timeseries[0].data.next_6_hours?.summary?.symbol_code ||
+                                       timeseries[0].data.next_1_hours?.summary?.symbol_code || '';
+                    let line4;
+                    if (symbolCode.includes('clearsky') || symbolCode.includes('fair')) {
+                        line4 = "Det blir klart resten av dagen";
+                    } else if (symbolCode.includes('partlycloudy')) {
+                        line4 = "Det blir delvis skyet resten av dagen";
+                    } else if (symbolCode.includes('cloudy')) {
+                        line4 = "Det forblir overskyet resten av dagen";
+                    } else if (symbolCode.includes('rain') || symbolCode.includes('sleet') || symbolCode.includes('snow')) {
+                        line4 = "Nedbør ventet senere i dag";
                     } else {
-                        text += ` og <strong>mye nedbør</strong> (<strong>${precip.toFixed(1)} mm</strong>).`;
+                        // Fallback: use average cloud coverage
+                        if (avgCloud < 25) line4 = "Det blir klart resten av dagen";
+                        else if (avgCloud < 50) line4 = "Det blir lettskyet resten av dagen";
+                        else if (avgCloud < 75) line4 = "Det blir delvis skyet resten av dagen";
+                        else line4 = "Det forblir overskyet resten av dagen";
                     }
 
-                    output = text;
+                    // Combine all lines with proper HTML structure
+                    output = `
+                        <div class="temp-range">${line1}</div>
+                        <div class="current-conditions">${line2}</div>
+                        <div class="precipitation-forecast">${line3}</div>
+                        <div class="cloud-forecast">${line4}</div>
+                    `;
 
-                    // Vis animasjon basert på vær
-                    showWeatherAnimation(avgTemp, avgWind, precip, avgCloud);
+                    // Show animation based on current conditions
+                    showWeatherAnimation(currentTemp, currentWind, nextHourPrecip, avgCloud);
                 }
 
                 const headline = document.getElementById('weather-headline');
@@ -241,39 +291,70 @@
             document.querySelectorAll('.test-controls button').forEach(btn => {
                 btn.classList.remove('active');
             });
-            
+
             // Legg til active class på klikket knapp
             const buttons = document.querySelectorAll('.test-controls button');
             const typeMap = { 'sun': 0, 'cloudy': 1, 'rain': 2, 'snow': 3, 'wind': 4 };
             buttons[typeMap[type]].classList.add('active');
-            
-            const texts = {
-                'sun': 'Laveste meldte i dag er <strong>15 grader</strong> og høyeste meldte er <strong>20 grader</strong> med <strong>lett vind</strong> på <strong>2.5 m/s</strong> og <strong>ingen nedbør</strong>.',
-                'cloudy': 'Laveste meldte i dag er <strong>10 grader</strong> og høyeste meldte er <strong>15 grader</strong> med <strong>svak vind</strong> og <strong>ingen nedbør</strong>.',
-                'rain': 'Laveste meldte i dag er <strong>8 grader</strong> og høyeste meldte er <strong>12 grader</strong> med <strong>lett vind</strong> på <strong>3.2 m/s</strong> og <strong>moderate mengder nedbør</strong> (<strong>4.5 mm</strong>).',
-                'snow': 'Laveste meldte i dag er <strong>-2 grader</strong> og høyeste meldte er <strong>1 grader</strong> med <strong>lett vind</strong> på <strong>2.8 m/s</strong> og <strong>moderate mengder nedbør</strong> (<strong>3.2 mm</strong>).',
-                'wind': 'Laveste meldte i dag er <strong>5 grader</strong> og høyeste meldte er <strong>10 grader</strong> med <strong>sterk vind</strong> på <strong>12.5 m/s</strong> og <strong>ingen nedbør</strong>.'
+
+            // Define test conditions
+            const conditions = {
+                'sun': { minTemp: 15, maxTemp: 20, currentTemp: 17, wind: 2.5, precip: 0, cloud: 20 },
+                'cloudy': { minTemp: 10, maxTemp: 15, currentTemp: 12, wind: 1.5, precip: 0, cloud: 85 },
+                'rain': { minTemp: 8, maxTemp: 12, currentTemp: 10, wind: 3.2, precip: 4.5, cloud: 90 },
+                'snow': { minTemp: -2, maxTemp: 1, currentTemp: -0.5, wind: 2.8, precip: 3.2, cloud: 95 },
+                'wind': { minTemp: 5, maxTemp: 10, currentTemp: 7.5, wind: 12.5, precip: 0, cloud: 60 }
             };
 
+            const cond = conditions[type];
+
+            // LINE 1: Min/Max
+            const line1 = `Laveste meldte i dag er <strong>${cond.minTemp}°</strong> og høyeste meldte er <strong>${cond.maxTemp}°</strong>`;
+
+            // LINE 2: Current + feels like
+            const feelsLike = calculateWindChill(cond.currentTemp, cond.wind);
+            let windText;
+            if (cond.wind < 2) windText = "svak vind";
+            else if (cond.wind < 5) windText = "lett vind";
+            else if (cond.wind < 10) windText = "frisk vind";
+            else windText = "sterk vind";
+            const line2 = `Akkurat nå er det <strong>${windText}</strong> og føles som <strong>${feelsLike}°</strong>`;
+
+            // LINE 3: Precipitation
+            let line3;
+            if (cond.precip < 0.1) {
+                line3 = "Ingen nedbør neste time";
+            } else if (cond.precip < 0.5) {
+                line3 = "Lett nedbør neste time";
+            } else if (cond.precip < 2) {
+                line3 = "Moderat nedbør neste time";
+            } else {
+                line3 = `Kraftig nedbør neste time (<strong>${cond.precip.toFixed(1)} mm</strong>)`;
+            }
+
+            // LINE 4: Cloud forecast
+            let line4;
+            if (cond.cloud < 25) line4 = "Det blir klart resten av dagen";
+            else if (cond.cloud < 50) line4 = "Det blir lettskyet resten av dagen";
+            else if (cond.cloud < 75) line4 = "Det blir delvis skyet resten av dagen";
+            else line4 = "Det forblir overskyet resten av dagen";
+
+            // Build HTML
             const headline = document.getElementById('weather-headline');
-            headline.innerHTML = texts[type];
+            headline.innerHTML = `
+                <div class="temp-range">${line1}</div>
+                <div class="current-conditions">${line2}</div>
+                <div class="precipitation-forecast">${line3}</div>
+                <div class="cloud-forecast">${line4}</div>
+            `;
 
             // Trigger animation
             headline.classList.remove('animate-in');
             void headline.offsetWidth; // Force reflow
             headline.classList.add('animate-in');
 
-            // Simuler værforhold
-            const conditions = {
-                'sun': { temp: 17, wind: 2.5, precip: 0, cloud: 20 },
-                'cloudy': { temp: 12, wind: 1.5, precip: 0, cloud: 85 },
-                'rain': { temp: 10, wind: 3.2, precip: 4.5, cloud: 90 },
-                'snow': { temp: -0.5, wind: 2.8, precip: 3.2, cloud: 95 },
-                'wind': { temp: 7.5, wind: 12.5, precip: 0, cloud: 60 }
-            };
-            
-            const cond = conditions[type];
-            showWeatherAnimation(cond.temp, cond.wind, cond.precip, cond.cloud);
+            // Show animation
+            showWeatherAnimation(cond.currentTemp, cond.wind, cond.precip, cond.cloud);
         }
     </script>
 </body>
