@@ -10,14 +10,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 
-    <!-- Noto Color Emoji for YoDeck emoji support -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <!-- Twemoji for YoDeck emoji support (self-hosted for reliability) -->
+    <script src="twemoji.min.js"></script>
 
     <!-- SINTEF Base Styles (Clean Version) -->
     <link rel="stylesheet" href="sintef-clean.css">
 
     <!-- Weather App Custom Styles -->
-    <link rel="stylesheet" href="weather-app.css?v=27">
+    <link rel="stylesheet" href="weather-app.css?v=28">
 </head>
 <body>
     <div class="logo">
@@ -167,6 +167,27 @@
                 mediaContainer.innerHTML = `
                     <img src="${mediaConfig.src}" alt="" class="info-media-image">
                 `;
+            }
+        }
+
+        // Helper function to parse emoji with Twemoji
+        function parseEmoji() {
+            if (typeof twemoji !== 'undefined') {
+                // Parse emoji in animation layer (snowflakes, clouds, leaves)
+                twemoji.parse(document.getElementById('animation'), {
+                    folder: 'svg',
+                    ext: '.svg'
+                });
+                // Parse emoji in info box (titles and text)
+                twemoji.parse(document.getElementById('info-box'), {
+                    folder: 'svg',
+                    ext: '.svg'
+                });
+                // Parse emoji in weather headline
+                twemoji.parse(document.getElementById('weather-headline'), {
+                    folder: 'svg',
+                    ext: '.svg'
+                });
             }
         }
 
@@ -322,6 +343,7 @@
                 document.getElementById('info-title').textContent = snowInfo.title;
                 renderMedia(snowInfo.media);
                 infoText.innerHTML = snowInfo.text;
+                parseEmoji();
             } else if (precip > 0.5) {
                 // REGN
                 document.body.classList.add('dark-bg');
@@ -338,6 +360,7 @@
                 document.getElementById('info-title').textContent = rainInfo.title;
                 renderMedia(rainInfo.media);
                 infoText.innerHTML = rainInfo.text;
+                parseEmoji();
             } else if (wind > 5) {
                 // VIND
                 document.body.classList.add('dark-bg');
@@ -362,6 +385,7 @@
                 document.getElementById('info-title').textContent = windInfo.title;
                 renderMedia(windInfo.media);
                 infoText.innerHTML = windInfo.text;
+                parseEmoji();
             } else if (cloud > 70) {
                 // OVERSKYET
                 document.body.classList.add('dark-bg');
@@ -379,6 +403,7 @@
                 document.getElementById('info-title').textContent = cloudyInfo.title;
                 renderMedia(cloudyInfo.media);
                 infoText.innerHTML = cloudyInfo.text;
+                parseEmoji();
             } else {
                 // SOL (default)
                 document.body.classList.add('dark-bg');
@@ -403,6 +428,7 @@
                 document.getElementById('info-title').textContent = sunInfo.title;
                 renderMedia(sunInfo.media);
                 infoText.innerHTML = sunInfo.text;
+                parseEmoji();
             }
         }
 
