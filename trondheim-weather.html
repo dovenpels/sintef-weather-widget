@@ -10,11 +10,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 
+    <!-- Noto Color Emoji for YoDeck emoji support -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
     <!-- SINTEF Base Styles (Clean Version) -->
     <link rel="stylesheet" href="sintef-clean.css">
 
     <!-- Weather App Custom Styles -->
-    <link rel="stylesheet" href="weather-app.css?v=21">
+    <link rel="stylesheet" href="weather-app.css?v=27">
 </head>
 <body>
     <div class="logo">
@@ -27,6 +30,7 @@
         <div id="animation" class="animation-layer"></div>
         <div id="info-box">
             <h2 id="info-title">Visste du at...</h2>
+            <div id="info-media"></div>
             <div id="info-text" class="loading">Laster informasjon...</div>
         </div>
     </div>
@@ -62,6 +66,108 @@
             const wc = 13.12 + 0.6215 * tempC - 11.37 * Math.pow(windKmh, 0.16)
                        + 0.3965 * tempC * Math.pow(windKmh, 0.16);
             return Math.round(wc);
+        }
+
+        // Info box variants for each weather type
+        const infoBoxVariants = {
+            snow: [
+                {
+                    title: 'Snow for the Future',
+                    text: 'Utvikler klimavennlig, energieffektiv og temperaturuavhengig snøproduksjon med varmepumper, snølagring og gjenbruk, samt deler kunnskap gjennom Snøkompetanse.no.'
+                },
+                {
+                    title: 'Brrrr! Nå er det kaldt ute. ❄️',
+                    text: 'SINTEF forsker på miljøvennlige vedovner.<br><br>Les hvordan du kan fyre varmt og hyggelig i peisen med færre utslipp på SINTEF-bloggen: <a href="http://blogg.sintef.no/tag/energitips/">blogg.sintef.no/tag/energitips/</a>.'
+                }
+            ],
+            rain: [
+                {
+                    title: 'Verdens beste vannkraftmodeller',
+                    text: 'SINTEF sine modeller brukes av kraftprodusenter i hele Norden. Modellene optimaliserer magasinforvaltning, markedsdeltakelse og kraftproduksjon fra langsiktig planlegging til sanntidsdrift.'
+                },
+                {
+                    title: 'Nå høljer det ned! 🌧️',
+                    text: 'Det er godt nytt for vannmagasinene.<br><br>SINTEF bidrar med milliarder i verdier fra vannkraft.'
+                },
+                {
+                    title: 'Nå er det dårlig vær! 🌧️',
+                    text: 'Da hender det at folk mister strømmen.<br><br>SINTEF forsker på metoder som gjør at strømmen kommer tilbake så raskt som mulig.',
+                    media: {
+                        type: 'youtube',
+                        src: 'iXcNiZAaiGg'
+                    }
+                }
+            ],
+            wind: [
+                {
+                    title: 'Konkurransedyktig norsk havvind og bærekraftig vindkraft',
+                    text: `NorthWind er et forskningssenter for vindkraft. Senteret ledes av SINTEF, og skal bidra til lønnsom norsk eksportindustri innen havvind, nye grønne jobber, og vindkraft som respekterer natur og mennesker.
+                    <div class="northwind-footer">
+                        <img src="NorthWind.svg" alt="NorthWind" class="northwind-logo-bottom">
+                        <span class="northwind-url">northwindresearch.no</span>
+                    </div>`,
+                    hasLogo: true
+                },
+                {
+                    title: 'Det blåser i dag! 💨',
+                    text: 'Det er godt nytt for vindkraften.<br><br>SINTEF forsker på hvordan vi kan hindre at fugler kolliderer med vindturbiner.'
+                },
+                {
+                    title: 'Vind i dag! 💨',
+                    text: 'Det er bra for fornybar energi.<br><br>SINTEF og NTNU forsker på fremtidens strømnett for havvind i prosjektet <strong>OceanGrid</strong>.'
+                }
+            ],
+            sun: [
+                {
+                    title: 'Solceller på taket',
+                    text: 'Energibygget har solceller på taket og varmepumper for oppvarming og nedkjøling. Bygget kan benytte fjernvarme fra NTNUs fjernvarmering og har miljøsertifiseringen BREEAM-NOR Excellent.',
+                    media: {
+                        type: 'image',
+                        src: 'energibygg-solceller.JPG'
+                    }
+                },
+                {
+                    title: 'Nå skinner sola! ☀️',
+                    text: 'Da frister det kanskje med litt aircondition?<br><br>SINTEF og NTNU har i flere tiår forsket på bærekraftige kjølemetoder som kan bidra til å hindre ytterligere global oppvarming.'
+                }
+            ],
+            cloudy: [
+                {
+                    title: 'Solceller virker også i overskyet vær',
+                    text: 'De produserer strøm i diffust lys, ofte rundt 10–40% av klarværsnivå. Kaldt vær kan øke virkningsgrad, men snø som dekker panelene stopper produksjonen.'
+                }
+            ]
+        };
+
+        // Helper function to get random info box variant
+        function getRandomInfoBox(type) {
+            const variants = infoBoxVariants[type];
+            return variants[Math.floor(Math.random() * variants.length)];
+        }
+
+        // Helper function to render media (image or video)
+        function renderMedia(mediaConfig) {
+            const mediaContainer = document.getElementById('info-media');
+            if (!mediaConfig) {
+                mediaContainer.innerHTML = '';
+                return;
+            }
+
+            if (mediaConfig.type === 'youtube') {
+                mediaContainer.innerHTML = `
+                    <iframe
+                        src="https://www.youtube.com/embed/${mediaConfig.src}?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&playsinline=1&playlist=${mediaConfig.src}"
+                        frameborder="0"
+                        allow="autoplay; encrypted-media"
+                        allowfullscreen
+                        class="info-media-youtube">
+                    </iframe>
+                `;
+            } else if (mediaConfig.type === 'image') {
+                mediaContainer.innerHTML = `
+                    <img src="${mediaConfig.src}" alt="" class="info-media-image">
+                `;
+            }
         }
 
         async function fetchWeather() {
@@ -212,8 +318,10 @@
                     snowflake.style.opacity = Math.random() * 0.6 + 0.4;
                     animationDiv.appendChild(snowflake);
                 }
-                document.getElementById('info-title').textContent = 'Snow for the Future';
-                infoText.textContent = 'Utvikler klimavennlig, energieffektiv og temperaturuavhengig snøproduksjon med varmepumper, snølagring og gjenbruk, samt deler kunnskap gjennom Snøkompetanse.no.';
+                const snowInfo = getRandomInfoBox('snow');
+                document.getElementById('info-title').textContent = snowInfo.title;
+                renderMedia(snowInfo.media);
+                infoText.innerHTML = snowInfo.text;
             } else if (precip > 0.5) {
                 // REGN
                 document.body.classList.add('dark-bg');
@@ -226,8 +334,10 @@
                     rain.style.animationDelay = -(Math.random() * 2) + 's';
                     animationDiv.appendChild(rain);
                 }
-                document.getElementById('info-title').textContent = 'Verdens beste vannkraftmodeller';
-                infoText.textContent = 'SINTEF sine modeller brukes av kraftprodusenter i hele Norden. Modellene optimaliserer magasinforvaltning, markedsdeltakelse og kraftproduksjon fra langsiktig planlegging til sanntidsdrift.';
+                const rainInfo = getRandomInfoBox('rain');
+                document.getElementById('info-title').textContent = rainInfo.title;
+                renderMedia(rainInfo.media);
+                infoText.innerHTML = rainInfo.text;
             } else if (wind > 5) {
                 // VIND
                 document.body.classList.add('dark-bg');
@@ -245,36 +355,13 @@
                     animationDiv.appendChild(leaf);
                 }
 
-                // Legg til vindmølle (havvindmølle for NorthWind)
-                const windmill = document.createElement('div');
-                windmill.className = 'windmill';
+                // Get random wind info variant
+                const windInfo = getRandomInfoBox('wind');
 
-                // Beregn rotasjonshastighet basert på vindstyrke
-                let rotorSpeed;
-                if (wind < 5) rotorSpeed = '5s';      // Lett vind
-                else if (wind < 10) rotorSpeed = '3s'; // Frisk vind
-                else rotorSpeed = '2s';                // Sterk vind
-
-                windmill.innerHTML = `
-                    <div class="windmill-rotor spinning" style="--rotor-speed: ${rotorSpeed}">
-                        <div class="blade blade-1"></div>
-                        <div class="blade blade-2"></div>
-                        <div class="blade blade-3"></div>
-                    </div>
-                    <div class="windmill-tower"></div>
-                `;
-
-                animationDiv.appendChild(windmill);
-
-                // Oppdater info-boksen med NorthWind informasjon og logo
-                document.getElementById('info-title').textContent = 'Konkurransedyktig norsk havvind og bærekraftig vindkraft';
-                infoText.innerHTML = `
-                    NorthWind er et forskningssenter for vindkraft. Senteret ledes av SINTEF, og skal bidra til lønnsom norsk eksportindustri innen havvind, nye grønne jobber, og vindkraft som respekterer natur og mennesker.
-                    <div class="northwind-footer">
-                        <img src="NorthWind.svg" alt="NorthWind" class="northwind-logo-bottom">
-                        <span class="northwind-url">northwindresearch.no</span>
-                    </div>
-                `;
+                // Set info box content
+                document.getElementById('info-title').textContent = windInfo.title;
+                renderMedia(windInfo.media);
+                infoText.innerHTML = windInfo.text;
             } else if (cloud > 70) {
                 // OVERSKYET
                 document.body.classList.add('dark-bg');
@@ -288,8 +375,10 @@
                     cloudEl.style.animationDelay = -(Math.random() * 50) + 's';
                     animationDiv.appendChild(cloudEl);
                 }
-                document.getElementById('info-title').textContent = 'Solceller virker også i overskyet vær';
-                infoText.textContent = 'De produserer strøm i diffust lys, ofte rundt 10–40% av klarværsnivå. Kaldt vær kan øke virkningsgrad, men snø som dekker panelene stopper produksjonen.';
+                const cloudyInfo = getRandomInfoBox('cloudy');
+                document.getElementById('info-title').textContent = cloudyInfo.title;
+                renderMedia(cloudyInfo.media);
+                infoText.innerHTML = cloudyInfo.text;
             } else {
                 // SOL (default)
                 document.body.classList.add('dark-bg');
@@ -310,8 +399,10 @@
                     cloudEl.style.opacity = '0.4';
                     animationDiv.appendChild(cloudEl);
                 }
-                document.getElementById('info-title').textContent = 'Solceller på taket';
-                infoText.textContent = 'Energibygget har solceller på taket og varmepumper for oppvarming og nedkjøling. Bygget kan benytte fjernvarme fra NTNUs fjernvarmering og har miljøsertifiseringen BREEAM-NOR Excellent.';
+                const sunInfo = getRandomInfoBox('sun');
+                document.getElementById('info-title').textContent = sunInfo.title;
+                renderMedia(sunInfo.media);
+                infoText.innerHTML = sunInfo.text;
             }
         }
 
