@@ -84,7 +84,7 @@ body {
   padding: 0;
 }
 
-.logo img {
+.logo svg {
   max-width: min(120px, 12vw);
   height: auto;
 }
