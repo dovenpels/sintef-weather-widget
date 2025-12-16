@@ -82,11 +82,13 @@ body {
   position: relative;
   margin: 0 0 var(--space-l) 0;
   padding: 0;
+  width: fit-content;
 }
 
 .logo svg {
-  max-width: min(120px, 12vw);
+  width: min(120px, 12vw);
   height: auto;
+  display: block;
 }
 
 /* Location badge - Base styles */
