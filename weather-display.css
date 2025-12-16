@@ -1,0 +1,305 @@
+/* ========================================
+   SINTEF Weather Display - Consolidated Styles
+   Replaces: weather-app.css + sintef-clean.css
+   ======================================== */
+
+/* ========================================
+   1. CSS RESET
+   ======================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+img {
+  border-style: none;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   2. CSS CUSTOM PROPERTIES
+   ======================================== */
+:root {
+  /* SINTEF Brand Colors */
+  --sintef-blue: #003c65;
+  --sintef-blue-dark: #002a47;
+  --sintef-green: #14b978;
+
+  /* Spacing Scale */
+  --space-l: 2rem;
+  --space-xl: 3rem;
+}
+
+/* ========================================
+   3. TYPOGRAPHY
+   ======================================== */
+body {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  line-height: 1.5;
+  color: white;
+  background: linear-gradient(to bottom, #0f7a4f, var(--sintef-blue-dark));
+  position: relative;
+  min-height: 100vh;
+}
+
+strong {
+  font-weight: 700;
+}
+
+h1 {
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* ========================================
+   4. LAYOUT
+   ======================================== */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 0 var(--space-xl) var(--space-l) var(--space-xl);
+  gap: var(--space-xl);
+  position: relative;
+}
+
+.logo {
+  flex-shrink: 0;
+  text-align: left;
+  z-index: 10;
+  position: relative;
+  margin: 0 0 var(--space-l) 0;
+  padding: 0;
+}
+
+.logo img {
+  max-width: min(120px, 12vw);
+  height: auto;
+}
+
+/* Location badge - Base styles */
+.location-tag {
+  flex-shrink: 0;
+  font-size: clamp(0.7rem, 1.4vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  width: fit-content;
+  z-index: 10;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Live indicator dot inside badge */
+.location-tag::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 100%;
+  flex-shrink: 0;
+}
+
+/* Ripple effect from dot */
+.location-tag::after {
+  content: '';
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 100%;
+  opacity: 0;
+  animation: ripple 3s cubic-bezier(.65, 0, .34, 1) infinite;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+/* Badge color */
+.location-tag.green {
+  color: #004628;
+  background: #CDFAE1;
+}
+
+
+#weather-headline {
+  flex-shrink: 0;
+  font-size: clamp(1rem, 2.5vw, 1.8rem);
+  font-weight: 400;
+  z-index: 10;
+  position: relative;
+  color: white;
+}
+
+/* Weather headline structure (4-line layout) */
+#weather-headline .temp-range {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+#weather-headline .current-conditions,
+#weather-headline .precipitation-forecast {
+  font-size: clamp(0.9rem, 2vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 0.8rem;
+}
+
+#weather-headline .cloud-forecast {
+  font-size: clamp(0.9rem, 2vw, 1.5rem);
+  font-weight: 400;
+  margin-bottom: 0.6rem;
+}
+
+
+.weather-container {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+/* Weather animation layer */
+.weather-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Rain drops */
+.rain-drop {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.4));
+  animation: fall linear infinite;
+  will-change: transform;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+/* Snow flakes */
+.snow-flake {
+  position: absolute;
+  color: white;
+  opacity: 0.7;
+  animation: snowfall linear infinite;
+  font-size: 1.5rem;
+  will-change: transform;
+}
+
+@keyframes snowfall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+/* Clouds */
+.cloud {
+  position: absolute;
+  color: white;
+  opacity: 0.15;
+  animation: drift linear infinite;
+  font-size: 4rem;
+  will-change: transform;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(-100px);
+  }
+  to {
+    transform: translateX(calc(100vw + 100px));
+  }
+}
+
+/* ========================================
+   5. FOOTER
+   ======================================== */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem var(--space-xl);
+  z-index: 20;
+  background: linear-gradient(to top, rgba(0, 42, 71, 0.3), transparent);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  color: white;
+  opacity: 0.8;
+}
+
+.data-source,
+.version-info {
+  font-weight: 400;
+}
+
+.last-updated {
+  font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+  font-weight: 400;
+  text-align: center;
+}
+
+/* ========================================
+   6. ANIMATIONS
+   ======================================== */
+
+/* Terminal cursor animation */
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  background: var(--sintef-green);
+  margin-left: 0.1em;
+  animation: cursorBlink 1s step-end infinite;
+  vertical-align: baseline;
+}
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Ripple animation for live indicator */
+@keyframes ripple {
+  from {
+    opacity: 1;
+    transform: translateY(-50%) scale(0.75);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-50%) scale(2.5);
+  }
+}
